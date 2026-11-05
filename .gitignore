@@ -1,0 +1,102 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Linker files
+*.ilk
+
+# Debugger Files
+*.pdb
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+*.so.*
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables & App bundles
+*.exe
+*.out
+*.app
+
+# Build directories & output
+build/
+Build/
+build-*/
+bin/
+out/
+dist/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+CMakeUserPresets.json
+cmake-build-*/
+
+# Visual Studio (MSVC) - Rất quan trọng khi có thành viên dùng Windows
+.vs/
+*.VC.db
+*.opendb
+Debug/
+Release/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+*.vcxproj.user
+
+# Visual Studio Code
+.vscode/ipch/
+.vscode/*.browse.c_cpp.db*
+browse.vc.db
+# (Nếu không muốn chia sẻ settings cá nhân, có thể bỏ comment dòng dưới)
+# .vscode/
+
+# JetBrains / CLion
+.idea/
+
+# Temporary & Log files
+*.tmp
+*.log
+*.bak
+*.swp
+*~
+
+# vcpkg / Conan (Package managers)
+vcpkg_installed/
+conan/
+
+# Debug info & Testing cache
+*.dwo
+Testing/
+.cache/
+.clangd/
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
