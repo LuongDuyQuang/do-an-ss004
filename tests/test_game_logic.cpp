@@ -71,5 +71,21 @@ int main() {
         assert(twoLinesBoard[0][col] == 0);
     }
 
+    assert(calculatePoints(0, 0) == 0);
+    assert(calculatePoints(1, 0) == 100);
+    assert(calculatePoints(2, 0) == 300);
+    assert(calculatePoints(3, 0) == 500);
+    assert(calculatePoints(4, 0) == 800);
+
+    assert(calculatePoints(0, 1) == 0);
+    assert(calculatePoints(1, 1) == 200);
+    assert(calculatePoints(2, 1) == 600);
+    assert(calculatePoints(3, 1) == 1000);
+    assert(calculatePoints(4, 1) == 1600);
+
+    assert(calculatePoints(-1, 0) == 0);
+    assert(calculatePoints(5, 0) == 0);
+    assert(calculatePoints(1, -1) == 0);
+
     return 0;
 }

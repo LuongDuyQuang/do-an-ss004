@@ -72,3 +72,30 @@ int clearFullLines(int board[ROWS][COLS]) {
 
     return clearedLines;
 }
+
+int calculatePoints(int clearedLines, int level) {
+    if (level < 0) {
+        return 0;
+    }
+
+    int basePoints = 0;
+
+    switch (clearedLines) {
+        case 1:
+            basePoints = 100;
+            break;
+        case 2:
+            basePoints = 300;
+            break;
+        case 3:
+            basePoints = 500;
+            break;
+        case 4:
+            basePoints = 800;
+            break;
+        default:
+            return 0;
+    }
+
+    return basePoints * (level + 1);
+}

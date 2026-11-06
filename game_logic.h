@@ -16,4 +16,7 @@ void lockPiece(int board[ROWS][COLS],
 // Xoa cac hang day va tra ve so hang da xoa.
 int clearFullLines(int board[ROWS][COLS]);
 
+// Tinh diem theo so hang da xoa va level hien tai.
+int calculatePoints(int clearedLines, int level);
+
 #endif
