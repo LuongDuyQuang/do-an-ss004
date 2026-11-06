@@ -25,3 +25,18 @@ bool isCollision(const int board[ROWS][COLS],
 
     return false;
 }
+
+void lockPiece(int board[ROWS][COLS],
+               const int shape[SIZE][SIZE], int row, int col, int value) {
+    if (isCollision(board, shape, row, col)) {
+        return;
+    }
+
+    for (int shapeRow = 0; shapeRow < SIZE; ++shapeRow) {
+        for (int shapeCol = 0; shapeCol < SIZE; ++shapeCol) {
+            if (shape[shapeRow][shapeCol] != 0) {
+                board[row + shapeRow][col + shapeCol] = value;
+            }
+        }
+    }
+}

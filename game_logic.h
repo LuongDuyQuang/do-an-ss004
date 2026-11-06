@@ -9,4 +9,8 @@ const int SIZE = 4;
 bool isCollision(const int board[ROWS][COLS],
                  const int shape[SIZE][SIZE], int row, int col);
 
+// Co dinh cac o cua khoi vao board khi vi tri hop le.
+void lockPiece(int board[ROWS][COLS],
+               const int shape[SIZE][SIZE], int row, int col, int value);
+
 #endif

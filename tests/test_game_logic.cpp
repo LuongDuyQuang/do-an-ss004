@@ -26,5 +26,19 @@ int main() {
     fixedCellBoard[1][1] = 2;
     assert(isCollision(fixedCellBoard, shape, 0, 0));
 
+    int lockBoard[ROWS][COLS] = {};
+    lockPiece(lockBoard, shape, 4, 3, 5);
+    assert(lockBoard[4][3] == 5);
+    assert(lockBoard[4][4] == 5);
+    assert(lockBoard[5][4] == 5);
+    assert(lockBoard[5][5] == 5);
+    assert(lockBoard[4][5] == 0);
+
+    int occupiedBoard[ROWS][COLS] = {};
+    occupiedBoard[5][4] = 7;
+    lockPiece(occupiedBoard, shape, 4, 3, 5);
+    assert(occupiedBoard[5][4] == 7);
+    assert(occupiedBoard[4][3] == 0);
+
     return 0;
 }
