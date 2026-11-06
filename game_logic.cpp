@@ -40,3 +40,35 @@ void lockPiece(int board[ROWS][COLS],
         }
     }
 }
+
+int clearFullLines(int board[ROWS][COLS]) {
+    int clearedLines = 0;
+
+    for (int row = ROWS - 1; row >= 0; --row) {
+        bool isFull = true;
+
+        for (int col = 0; col < COLS; ++col) {
+            if (board[row][col] == 0) {
+                isFull = false;
+                break;
+            }
+        }
+
+        if (isFull) {
+            for (int aboveRow = row; aboveRow > 0; --aboveRow) {
+                for (int col = 0; col < COLS; ++col) {
+                    board[aboveRow][col] = board[aboveRow - 1][col];
+                }
+            }
+
+            for (int col = 0; col < COLS; ++col) {
+                board[0][col] = 0;
+            }
+
+            ++clearedLines;
+            ++row; // Kiem tra lai hang vua duoc don xuong.
+        }
+    }
+
+    return clearedLines;
+}

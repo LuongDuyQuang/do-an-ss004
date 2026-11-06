@@ -40,5 +40,36 @@ int main() {
     assert(occupiedBoard[5][4] == 7);
     assert(occupiedBoard[4][3] == 0);
 
+    int notFullBoard[ROWS][COLS] = {};
+    for (int col = 0; col < COLS - 1; ++col) {
+        notFullBoard[ROWS - 1][col] = 1;
+    }
+    assert(clearFullLines(notFullBoard) == 0);
+    assert(notFullBoard[ROWS - 1][COLS - 2] == 1);
+    assert(notFullBoard[ROWS - 1][COLS - 1] == 0);
+
+    int oneLineBoard[ROWS][COLS] = {};
+    oneLineBoard[0][0] = 6;
+    oneLineBoard[ROWS - 2][0] = 4;
+    for (int col = 0; col < COLS; ++col) {
+        oneLineBoard[ROWS - 1][col] = 1;
+    }
+    assert(clearFullLines(oneLineBoard) == 1);
+    assert(oneLineBoard[0][0] == 0);
+    assert(oneLineBoard[1][0] == 6);
+    assert(oneLineBoard[ROWS - 1][0] == 4);
+
+    int twoLinesBoard[ROWS][COLS] = {};
+    twoLinesBoard[ROWS - 3][2] = 3;
+    for (int col = 0; col < COLS; ++col) {
+        twoLinesBoard[ROWS - 2][col] = 1;
+        twoLinesBoard[ROWS - 1][col] = 2;
+    }
+    assert(clearFullLines(twoLinesBoard) == 2);
+    assert(twoLinesBoard[ROWS - 1][2] == 3);
+    for (int col = 0; col < COLS; ++col) {
+        assert(twoLinesBoard[0][col] == 0);
+    }
+
     return 0;
 }

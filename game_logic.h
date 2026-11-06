@@ -13,4 +13,7 @@ bool isCollision(const int board[ROWS][COLS],
 void lockPiece(int board[ROWS][COLS],
                const int shape[SIZE][SIZE], int row, int col, int value);
 
+// Xoa cac hang day va tra ve so hang da xoa.
+int clearFullLines(int board[ROWS][COLS]);
+
 #endif
