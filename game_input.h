@@ -12,4 +12,6 @@ enum class KeyAction {
     QUIT
 };
 
+KeyAction pollInput();
+
 #endif
