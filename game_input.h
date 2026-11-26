@@ -1,0 +1,15 @@
+#ifndef GAME_INPUT_H
+#define GAME_INPUT_H
+
+enum class KeyAction {
+    NONE,
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    ROTATE,
+    SOFT_DROP,
+    HARD_DROP,
+    PAUSE,
+    QUIT
+};
+
+#endif
