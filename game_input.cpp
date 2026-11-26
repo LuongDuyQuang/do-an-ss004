@@ -36,3 +36,16 @@ int loadHighScore(const string& filename) {
     }
     return highScore;
 }
+
+bool saveHighScore(int newScore, const string& filename) {
+    int currentHigh = loadHighScore(filename);
+    if (newScore > currentHigh) {
+        ofstream outFile(filename);
+        if (outFile.is_open()) {
+            outFile << newScore;
+            outFile.close();
+            return true;
+        }
+    }
+    return false;
+}
