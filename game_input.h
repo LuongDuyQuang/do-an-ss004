@@ -13,5 +13,6 @@ enum class KeyAction {
 };
 
 KeyAction pollInput();
+int loadHighScore(const std::string& filename = "highscore.txt");
 
 #endif

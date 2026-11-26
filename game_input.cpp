@@ -26,3 +26,13 @@ KeyAction pollInput() {
         default: return KeyAction::NONE;
     }
 }
+
+int loadHighScore(const string& filename) {
+    ifstream inFile(filename);
+    int highScore = 0;
+    if (inFile.is_open()) {
+        inFile >> highScore;
+        inFile.close();
+    }
+    return highScore;
+}
