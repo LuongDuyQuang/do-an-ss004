@@ -49,3 +49,13 @@ bool saveHighScore(int newScore, const string& filename) {
     }
     return false;
 }
+
+void playSound(SoundEffect effect) {
+    switch (effect) {
+        case SoundEffect::MOVE:       Beep(300, 30); break;
+        case SoundEffect::ROTATE:     Beep(500, 40); break;
+        case SoundEffect::DROP:       Beep(200, 60); break;
+        case SoundEffect::CLEAR_LINE: Beep(700, 80); Beep(900, 100); break;
+        case SoundEffect::GAME_OVER:  Beep(400, 150); Beep(300, 150); Beep(200, 300); break;
+    }
+}
