@@ -41,3 +41,35 @@ void triggerGameOver(GameState &state)
     state.screen = STATE_GAMEOVER;
     state.needRedraw = true;
 }
+
+bool consumeGravityTick(GameState &state, double deltaTimeMs)
+{
+    if (state.screen != STATE_PLAYING || state.isPaused || state.isGameOver)
+    {
+        return false;
+    }
+
+    if (deltaTimeMs <= 0.0)
+    {
+        return false;
+    }
+
+    state.dropTimerMs += deltaTimeMs;
+    if (state.dropTimerMs >= state.dropIntervalMs)
+    {
+        state.dropTimerMs -= state.dropIntervalMs;
+        if (state.dropTimerMs >= state.dropIntervalMs)
+        {
+            state.dropTimerMs = 0.0;
+        }
+        state.needRedraw = true;
+        return true;
+    }
+
+    return false;
+}
+
+void resetDropTimer(GameState &state)
+{
+    state.dropTimerMs = 0.0;
+}
