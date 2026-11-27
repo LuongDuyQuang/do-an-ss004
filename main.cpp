@@ -36,25 +36,51 @@ void startNewSession(GameSession &session, ScreenState startScreen = STATE_MENU)
     spawnNextPiece(session);
 }
 
-void drawMenu() 
-{
+// Khoa khoi, xoa hang day, tinh diem/level, sinh khoi moi va kiem tra Game Over
+void lockAndSpawn(GameSession &session) {
+    lockPiece(session.board, session.currentPiece.shape,
+              session.currentPiece.y, session.currentPiece.x,
+              static_cast<int>(session.currentPiece.type));
+
+    int cleared = clearFullLines(session.board);
+    if (cleared > 0) {
+        session.state.score += calculatePoints(cleared, session.state.level);
+        session.linesClearedTotal += cleared;
+        session.state.level = 1 + session.linesClearedTotal / 10;
+
+        double nextInterval = 500.0 - (session.state.level - 1) * 40.0;
+        session.state.dropIntervalMs = (nextInterval > 100.0) ? nextInterval : 100.0;
+    }
+
+    spawnNextPiece(session);
+    if (isCollision(session.board, session.currentPiece.shape,
+                    session.currentPiece.y, session.currentPiece.x)) {
+        triggerGameOver(session.state);
+    }
+    session.state.needRedraw = true;
+}
+
+void drawMenu() {
     system("cls");
     cout << "=================================\n";
     cout << "        TETRIS CONSOLE C++       \n";
     cout << "=================================\n";
-    cout << "  [Enter / Space] : Bat dau choi \n";
-    cout << "  [A / D / X]     : Trai/Phai/Xuong\n";
-    cout << "  [P]             : Tam dung     \n";
-    cout << "  [Q]             : Thoat / Dung \n";
+    cout << "  [Enter]       : Bat dau choi   \n";
+    cout << "  [A / D]       : Trai / Phai    \n";
+    cout << "  [W]           : Xoay khoi (SRS)\n";
+    cout << "  [S / X]       : Roi nhanh      \n";
+    cout << "  [Space]       : Tha tuc thi    \n";
+    cout << "  [P]           : Tam dung       \n";
+    cout << "  [Q]           : Thoat / Dung   \n";
     cout << "=================================\n";
 }
 
-void drawPauseScreen(const GameState &state)
-{
-    draw();
-    cout << "\n[TAM DUNG] Score: " << state.score
-         << " | Level: " << state.level << "\n";
-    cout << "Nhan [P] de tiep tuc, [Q] de ve Menu.\n";
+void drawPauseScreen(const GameSession &session) {
+    renderFrame(session.board, session.state.score, session.state.level,
+                session.currentPiece.shape, session.currentPiece.y,
+                session.currentPiece.x, session.nextPiece.shape);
+    setCursorPosition(0, ROWS + 3);
+    cout << "[TAM DUNG] Nhan [P] de tiep tuc, [Q] de ve Menu.\n";
 }
 
 void drawGameOverScreen(const GameState &state) {
@@ -70,7 +96,6 @@ void drawGameOverScreen(const GameState &state) {
     cout << "=================================\n";
 }
 
-void removeLine() {}
 
 // BUOC 1 XU LY PHIM BAM THEO TUNG MAN HINH
 void processInput(GameState &state) {
