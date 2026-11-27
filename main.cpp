@@ -2,12 +2,12 @@
 #include <cstdlib>
 #include <chrono>
 #include <thread>
-#include <conio.h>
 
 #include "game_state.h"
 #include "game_logic.h"
 #include "tetromino.h"
 #include "game_board.h"
+#include "game_input.h"
 
 using namespace std;
 
@@ -17,6 +17,7 @@ struct GameSession {
     Tetromino nextPiece;
     GameState state;
     int linesClearedTotal;
+    int highScore;
 };
 
 
@@ -34,6 +35,7 @@ void startNewSession(GameSession &session, ScreenState startScreen = STATE_MENU)
     session.linesClearedTotal = 0;
     session.nextPiece = createTetromino(getRandomPieceBag());
     spawnNextPiece(session);
+    session.highScore = loadHighScore();
 }
 
 
@@ -50,119 +52,110 @@ void lockAndSpawn(GameSession &session) {
 
         double nextInterval = 500.0 - (session.state.level - 1) * 40.0;
         session.state.dropIntervalMs = (nextInterval > 100.0) ? nextInterval : 100.0;
+        playSound(SoundEffect::CLEAR_LINE);
     }
 
     spawnNextPiece(session);
     if (isCollision(session.board, session.currentPiece.shape,
                     session.currentPiece.y, session.currentPiece.x)) {
+        saveHighScore(session.state.score);
+        session.highScore = loadHighScore();
+        playSound(SoundEffect::GAME_OVER);
         triggerGameOver(session.state);
     }
     session.state.needRedraw = true;
 }
 
-void drawMenu() {
-    system("cls");
-    cout << "=================================\n";
-    cout << "        TETRIS CONSOLE C++       \n";
-    cout << "=================================\n";
-    cout << "  [Enter]       : Bat dau choi   \n";
-    cout << "  [A / D]       : Trai / Phai    \n";
-    cout << "  [W]           : Xoay khoi (SRS)\n";
-    cout << "  [S / X]       : Roi nhanh      \n";
-    cout << "  [Space]       : Tha tuc thi    \n";
-    cout << "  [P]           : Tam dung       \n";
-    cout << "  [Q]           : Thoat / Dung   \n";
-    cout << "=================================\n";
-}
 
-void drawPauseScreen(const GameSession &session) {
-    renderFrame(session.board, session.state.score, session.state.level,
-                session.currentPiece.shape, session.currentPiece.y,
-                session.currentPiece.x, session.nextPiece.shape);
-    setCursorPosition(0, ROWS + 3);
-    cout << "[TAM DUNG] Nhan [P] de tiep tuc, [Q] de ve Menu.\n";
-}
 
-void drawGameOverScreen(const GameState &state) {
+
+
+void drawGameOverScreen(const GameSession &session) {
     system("cls");
     cout << "=================================\n";
     cout << "            GAME OVER!           \n";
     cout << "=================================\n";
-    cout << "  Diem so : " << state.score << "\n";
-    cout << "  Cap do  : " << state.level << "\n";
+    cout << "  Diem so : " << session.state.score << "\n";
+    cout << "  Ky luc  : " << session.highScore << "\n";
+    cout << "  Cap do  : " << session.state.level << "\n";
     cout << "---------------------------------\n";
-    cout << "  Nhan [R] de choi lai           \n";
-    cout << "  Nhan [Q] de thoat              \n";
+    cout << "  Nhan [Space] de choi lai       \n";
+    cout << "  Nhan [Q]     de thoat          \n";
     cout << "=================================\n";
 }
 
 
 // XU LY PHIM BAM 
 void processInput(GameSession &session) {
-    if (!_kbhit()) return;
-    int c = _getch();
-
-    if (session.state.screen == STATE_MENU) {
-        if (c == '\r' || c == ' ') {
-            system("cls");
-            startNewSession(session, STATE_PLAYING);
-        } else if (c == 'q' || c == 'Q') {
-            session.state.isRunning = false;
-        }
+    if (session.state.screen != STATE_PLAYING &&
+        session.state.screen != STATE_GAMEOVER) {
         return;
     }
 
-    if (session.state.screen == STATE_PAUSED) {
-        if (c == 'p' || c == 'P') {
-            system("cls");
-            togglePause(session.state);
-        } else if (c == 'q' || c == 'Q') {
-            startNewSession(session, STATE_MENU);
-        }
-        return;
-    }
+    KeyAction action = pollInput();
+    if (action == KeyAction::NONE) return;
 
     if (session.state.screen == STATE_GAMEOVER) {
-        if (c == 'r' || c == 'R') {
+        if (action == KeyAction::HARD_DROP) {
             system("cls");
             startNewSession(session, STATE_PLAYING);
-        } else if (c == 'q' || c == 'Q') {
+        } else if (action == KeyAction::QUIT) {
             session.state.isRunning = false;
         }
         return;
     }
 
-    if ((c == 'a' || c == 'A') &&
-        !isCollision(session.board, session.currentPiece.shape,
-                     session.currentPiece.y, session.currentPiece.x - 1)) {
-        session.currentPiece.x--;
-        session.state.needRedraw = true;
-    } else if ((c == 'd' || c == 'D') &&
-               !isCollision(session.board, session.currentPiece.shape,
-                            session.currentPiece.y, session.currentPiece.x + 1)) {
-        session.currentPiece.x++;
-        session.state.needRedraw = true;
-    } else if (c == 'w' || c == 'W') {
-        if (rotateWithWallKick(session.currentPiece, session.board)) {
-            session.state.needRedraw = true;
-        }
-    } else if ((c == 's' || c == 'S' || c == 'x' || c == 'X') &&
-               !isCollision(session.board, session.currentPiece.shape,
-                            session.currentPiece.y + 1, session.currentPiece.x)) {
-        session.currentPiece.y++;
-        resetDropTimer(session.state);
-        session.state.needRedraw = true;
-    } else if (c == ' ') {
-        while (!isCollision(session.board, session.currentPiece.shape,
-                            session.currentPiece.y + 1, session.currentPiece.x)) {
-            session.currentPiece.y++;
-        }
-        lockAndSpawn(session);
-        resetDropTimer(session.state);
-    } else if (c == 'p' || c == 'P') {
-        togglePause(session.state);
-    } else if (c == 'q' || c == 'Q') {
-        triggerGameOver(session.state);
+    switch (action) {
+        case KeyAction::MOVE_LEFT:
+            if (!isCollision(session.board, session.currentPiece.shape,
+                             session.currentPiece.y, session.currentPiece.x - 1)) {
+                session.currentPiece.x--;
+                playSound(SoundEffect::MOVE);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::MOVE_RIGHT:
+            if (!isCollision(session.board, session.currentPiece.shape,
+                             session.currentPiece.y, session.currentPiece.x + 1)) {
+                session.currentPiece.x++;
+                playSound(SoundEffect::MOVE);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::ROTATE:
+            if (rotateWithWallKick(session.currentPiece, session.board)) {
+                playSound(SoundEffect::ROTATE);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::SOFT_DROP:
+            if (!isCollision(session.board, session.currentPiece.shape,
+                             session.currentPiece.y + 1, session.currentPiece.x)) {
+                session.currentPiece.y++;
+                resetDropTimer(session.state);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::HARD_DROP:
+            while (!isCollision(session.board, session.currentPiece.shape,
+                                session.currentPiece.y + 1, session.currentPiece.x)) {
+                session.currentPiece.y++;
+            }
+            playSound(SoundEffect::DROP);
+            lockAndSpawn(session);
+            resetDropTimer(session.state);
+            break;
+        case KeyAction::PAUSE:
+            togglePause(session.state);
+            break;
+        case KeyAction::QUIT:
+            saveHighScore(session.state.score);
+            session.highScore = loadHighScore();
+            playSound(SoundEffect::GAME_OVER);
+            triggerGameOver(session.state);
+            break;
+        case KeyAction::NONE:
+            break;
     }
 }
 
@@ -188,7 +181,12 @@ void renderGame(GameSession &session) {
 
     switch (session.state.screen) {
         case STATE_MENU:
-            drawMenu();
+            if (showStartMenu(session.highScore)) {
+                system("cls");
+                startNewSession(session, STATE_PLAYING);
+            } else {
+                session.state.isRunning = false;
+            }
             break;
         case STATE_PLAYING:
             renderFrame(session.board, session.state.score, session.state.level,
@@ -198,10 +196,15 @@ void renderGame(GameSession &session) {
             cout << "[A/D] Di chuyen | [W] Xoay | [S] Xuong | [Space] Tha | [P] Pause\n";
             break;
         case STATE_PAUSED:
-            drawPauseScreen(session);
+            if (showPauseMenu()) {
+                system("cls");
+                togglePause(session.state);
+            } else {
+                startNewSession(session, STATE_MENU);
+            }
             break;
         case STATE_GAMEOVER:
-            drawGameOverScreen(session.state);
+            drawGameOverScreen(session);
             break;
     }
 }
