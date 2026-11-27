@@ -160,3 +160,19 @@ bool rotateWithWallKick(Tetromino& piece, const int board[ROWS][COLS])
 
     return false;
 }
+
+PieceType getRandomPieceBag()
+{
+    static std::vector<PieceType> bag;
+    static std::mt19937 rng(std::random_device{}());
+
+    if (bag.empty())
+    {
+        bag = {PIECE_I, PIECE_J, PIECE_L, PIECE_O, PIECE_S, PIECE_T, PIECE_Z};
+        std::shuffle(bag.begin(), bag.end(), rng);
+    }
+
+    PieceType nextPiece = bag.back();
+    bag.pop_back();
+    return nextPiece;
+}
