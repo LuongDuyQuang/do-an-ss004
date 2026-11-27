@@ -51,5 +51,32 @@ int main()
     assert(testT.rotation == 0);
     std::cout << "[PASS] Xoay 4 lan tro ve trang thai ban dau.\n\n";
 
+    std::cout << "=== TEST 2: SRS WALL KICK VOI game_logic.cpp ===\n";
+    int board[ROWS][COLS] = {};
+    Tetromino pieceI = createTetromino(PIECE_I, 7, 5);
+    rotateClockwise(pieceI);
+
+    bool rotated = rotateWithWallKick(pieceI, board);
+    assert(rotated);
+    assert(pieceI.x == 6);
+    assert(!isCollision(board, pieceI.shape, pieceI.y, pieceI.x));
+    std::cout << "[PASS] Wall Kick thanh cong, toa do x lui ve: " << pieceI.x << "\n\n";
+
+    std::cout << "=== TEST 3: 7-BAG RANDOMIZER ===\n";
+    for (int bagIndex = 1; bagIndex <= 2; ++bagIndex)
+    {
+        std::set<PieceType> seen;
+        std::cout << "Bag " << bagIndex << ": ";
+        for (int i = 0; i < 7; ++i)
+        {
+            PieceType p = getRandomPieceBag();
+            seen.insert(p);
+            std::cout << static_cast<int>(p) << ' ';
+        }
+        std::cout << '\n';
+        assert(seen.size() == 7);
+    }
+    std::cout << "[PASS] Moi tui 7 khoi deu du 7 loai khac nhau.\n";
     return 0;
 }
+
