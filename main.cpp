@@ -1,6 +1,12 @@
 #include <iostream>
 #include <conio.h>
 
+#include <cstdlib>
+#include <ctime>
+#include <chrono>
+#include <thread>
+#include "game_state.h"
+
 using namespace std;
 #define H 20
 #define W 15
@@ -107,6 +113,47 @@ void draw(){
 
     for (int i = 0 ; i < H ; i++, cout<<endl)
         for (int j = 0 ; j < W ; j++) cout<<board[i][j];
+}
+
+void spawnNewPiece() 
+{
+    x = 5;
+    y = 0;
+    b = rand() % 7;
+}
+
+void drawMenu() 
+{
+    system("cls");
+    cout << "=================================\n";
+    cout << "        TETRIS CONSOLE C++       \n";
+    cout << "=================================\n";
+    cout << "  [Enter / Space] : Bat dau choi \n";
+    cout << "  [A / D / X]     : Trai/Phai/Xuong\n";
+    cout << "  [P]             : Tam dung     \n";
+    cout << "  [Q]             : Thoat / Dung \n";
+    cout << "=================================\n";
+}
+
+void drawPauseScreen(const GameState &state)
+{
+    draw();
+    cout << "\n[TAM DUNG] Score: " << state.score
+         << " | Level: " << state.level << "\n";
+    cout << "Nhan [P] de tiep tuc, [Q] de ve Menu.\n";
+}
+
+void drawGameOverScreen(const GameState &state) {
+    system("cls");
+    cout << "=================================\n";
+    cout << "            GAME OVER!           \n";
+    cout << "=================================\n";
+    cout << "  Diem so : " << state.score << "\n";
+    cout << "  Cap do  : " << state.level << "\n";
+    cout << "---------------------------------\n";
+    cout << "  Nhan [R] de choi lai           \n";
+    cout << "  Nhan [Q] de thoat              \n";
+    cout << "=================================\n";
 }
 
 
