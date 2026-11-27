@@ -1,125 +1,39 @@
 #include <iostream>
-#include <conio.h>
-
 #include <cstdlib>
-#include <ctime>
 #include <chrono>
 #include <thread>
+#include <conio.h>
+
 #include "game_state.h"
+#include "game_logic.h"
+#include "tetromino.h"
+#include "game_board.h"
 
 using namespace std;
-#define H 20
-#define W 15
-char board[H][W] = {};
 
-int x, y, b;
-char blocks[][4][4] ={
-        {{' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '}},
-        {{' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {'I','I','I','I'},
-         {' ',' ',' ',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','T',' ',' '},
-         {'T','T','T',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','S','S',' '},
-         {'S','S',' ',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {'Z','Z',' ',' '},
-         {' ','Z','Z',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {'J',' ',' ',' '},
-         {'J','J','J',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ',' ','L',' '},
-         {'L','L','L',' '},
-         {' ',' ',' ',' '}}
+struct GameSession {
+    int board[ROWS][COLS];
+    Tetromino currentPiece;
+    Tetromino nextPiece;
+    GameState state;
+    int linesClearedTotal;
 };
-bool canMove(int dx, int dy){
-    for (int i = 0; i < 4; i++ )
-        for (int j = 0; j < 4; j++ )
-            if (blocks[b][i][j] != ' ') {
-                int xt = x + j + dx;
-                int yt = y + i + dy;
-                if (xt < 1 || xt >= W-1 || yt >= H-1 ) return false;
-                if (board[yt][xt] != ' ') return false;
-            }
-    return true;
-}
-void block2Board(){
-    for (int i = 0; i < 4; i++ )
-        for (int j = 0; j < 4; j++ )
-            if (blocks[b][i][j] != ' ')
-                board[y+i][x+j] = blocks[b][i][j];
-}
-void boardDelBlock(){
-    for (int i = 0; i < 4; i++ )
-        for (int j = 0; j < 4; j++ )
-            if (blocks[b][i][j] != ' ')
-                board[y+i][x+j] = ' ';
-}
-void initBoard(){
-    for (int i = 0 ; i < H ; i++)
-        for (int j = 0 ; j < W ; j++)
-            if (i == 0 || i == H-1 || j ==0 || j == W-1) board[i][j] = '#';
-            else board[i][j] = ' ';
-}
-void draw(){
-    system("cls");
 
-    for (int i = 0 ; i < H ; i++, cout<<endl)
-        for (int j = 0 ; j < W ; j++) cout<<board[i][j];
+
+void spawnNextPiece(GameSession &session) {
+    session.currentPiece = session.nextPiece;
+    session.currentPiece.x = 3;
+    session.currentPiece.y = 0;
+    session.nextPiece = createTetromino(getRandomPieceBag());
 }
 
-void spawnNewPiece() 
-{
-    x = 5;
-    y = 0;
-    b = rand() % 7;
+
+void startNewSession(GameSession &session, ScreenState startScreen = STATE_MENU) {
+    initBoard(session.board);
+    initGameState(session.state, startScreen);
+    session.linesClearedTotal = 0;
+    session.nextPiece = createTetromino(getRandomPieceBag());
+    spawnNextPiece(session);
 }
 
 void drawMenu() 
