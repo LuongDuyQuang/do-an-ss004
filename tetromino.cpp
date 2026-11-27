@@ -82,3 +82,30 @@ Tetromino createTetromino(PieceType type, int startX, int startY)
 
     return piece;
 }
+
+void rotateClockwise(Tetromino& piece)
+{
+    if (piece.type == PIECE_O)
+    {
+        return;
+    }
+
+    int temp[SIZE][SIZE];
+    for (int i = 0; i < SIZE; ++i)
+    {
+        for (int j = 0; j < SIZE; ++j)
+        {
+            temp[j][SIZE - 1 - i] = piece.shape[i][j];
+        }
+    }
+
+    for (int i = 0; i < SIZE; ++i)
+    {
+        for (int j = 0; j < SIZE; ++j)
+        {
+            piece.shape[i][j] = temp[i][j];
+        }
+    }
+
+    piece.rotation = (piece.rotation + 1) % 4;
+}
