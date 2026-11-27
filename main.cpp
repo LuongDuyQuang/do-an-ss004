@@ -98,52 +98,72 @@ void drawGameOverScreen(const GameState &state) {
 
 
 // BUOC 1 XU LY PHIM BAM THEO TUNG MAN HINH
-void processInput(GameState &state) {
-    if (!kbhit()) return;
-    char c = getch();
-    if (state.screen == STATE_MENU) {
+void processInput(GameSession &session) {
+    if (!_kbhit()) return;
+    int c = _getch();
+
+    if (session.state.screen == STATE_MENU) {
         if (c == '\r' || c == ' ') {
-            initBoard();
-            spawnNewPiece();
-            startGame(state);
+            system("cls");
+            startNewSession(session, STATE_PLAYING);
         } else if (c == 'q' || c == 'Q') {
-            state.isRunning = false;
+            session.state.isRunning = false;
         }
         return;
     }
-    if (state.screen == STATE_PAUSED) {
+
+    if (session.state.screen == STATE_PAUSED) {
         if (c == 'p' || c == 'P') {
-            togglePause(state);
+            system("cls");
+            togglePause(session.state);
         } else if (c == 'q' || c == 'Q') {
-            initGameState(state, STATE_MENU);
+            startNewSession(session, STATE_MENU);
         }
         return;
     }
-    if (state.screen == STATE_GAMEOVER) {
+
+    if (session.state.screen == STATE_GAMEOVER) {
         if (c == 'r' || c == 'R') {
-            initBoard();
-            spawnNewPiece();
-            startGame(state);
+            system("cls");
+            startNewSession(session, STATE_PLAYING);
         } else if (c == 'q' || c == 'Q') {
-            state.isRunning = false;
+            session.state.isRunning = false;
         }
         return;
     }
-    // Trang thai STATE_PLAYING
-    if ((c == 'a' || c == 'A') && canMove(-1, 0)) {
-        x--;
-        state.needRedraw = true;
-    } else if ((c == 'd' || c == 'D') && canMove(1, 0)) {
-        x++;
-        state.needRedraw = true;
-    } else if ((c == 'x' || c == 'X') && canMove(0, 1)) {
-        y++;
-        resetDropTimer(state);
-        state.needRedraw = true;
+
+    // TODO (sau khi sua game_input cua Nhi): thay doan nay bang pollInput()
+    if ((c == 'a' || c == 'A') &&
+        !isCollision(session.board, session.currentPiece.shape,
+                     session.currentPiece.y, session.currentPiece.x - 1)) {
+        session.currentPiece.x--;
+        session.state.needRedraw = true;
+    } else if ((c == 'd' || c == 'D') &&
+               !isCollision(session.board, session.currentPiece.shape,
+                            session.currentPiece.y, session.currentPiece.x + 1)) {
+        session.currentPiece.x++;
+        session.state.needRedraw = true;
+    } else if (c == 'w' || c == 'W') {
+        if (rotateWithWallKick(session.currentPiece, session.board)) {
+            session.state.needRedraw = true;
+        }
+    } else if ((c == 's' || c == 'S' || c == 'x' || c == 'X') &&
+               !isCollision(session.board, session.currentPiece.shape,
+                            session.currentPiece.y + 1, session.currentPiece.x)) {
+        session.currentPiece.y++;
+        resetDropTimer(session.state);
+        session.state.needRedraw = true;
+    } else if (c == ' ') {
+        while (!isCollision(session.board, session.currentPiece.shape,
+                            session.currentPiece.y + 1, session.currentPiece.x)) {
+            session.currentPiece.y++;
+        }
+        lockAndSpawn(session);
+        resetDropTimer(session.state);
     } else if (c == 'p' || c == 'P') {
-        togglePause(state);
+        togglePause(session.state);
     } else if (c == 'q' || c == 'Q') {
-        triggerGameOver(state);
+        triggerGameOver(session.state);
     }
 }
 
