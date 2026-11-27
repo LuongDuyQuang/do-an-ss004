@@ -109,3 +109,54 @@ void rotateClockwise(Tetromino& piece)
 
     piece.rotation = (piece.rotation + 1) % 4;
 }
+
+namespace
+{
+    const int SRS_KICKS_JLSTZ[4][5][2] =
+    {
+        {{0, 0}, {-1, 0}, {-1, -1}, {0, 2}, {-1, 2}},
+        {{0, 0}, {1, 0}, {1, 1}, {0, -2}, {1, -2}},
+        {{0, 0}, {1, 0}, {1, -1}, {0, 2}, {1, 2}},
+        {{0, 0}, {-1, 0}, {-1, 1}, {0, -2}, {-1, -2}}
+    };
+
+    const int SRS_KICKS_I[4][5][2] =
+    {
+        {{0, 0}, {-2, 0}, {1, 0}, {-2, 1}, {1, -2}},
+        {{0, 0}, {-1, 0}, {2, 0}, {-1, -2}, {2, 1}},
+        {{0, 0}, {2, 0}, {-1, 0}, {2, -1}, {-1, 2}},
+        {{0, 0}, {1, 0}, {-2, 0}, {1, 2}, {-2, -1}}
+    };
+}
+
+bool rotateWithWallKick(Tetromino& piece, const int board[ROWS][COLS])
+{
+    if (piece.type == PIECE_O)
+    {
+        return true;
+    }
+
+    int oldRotation = piece.rotation;
+    Tetromino rotated = piece;
+    rotateClockwise(rotated);
+
+    const int (*kickTable)[2] = (piece.type == PIECE_I)
+                                    ? SRS_KICKS_I[oldRotation]
+                                    : SRS_KICKS_JLSTZ[oldRotation];
+
+    for (int i = 0; i < 5; ++i)
+    {
+        int dx = kickTable[i][0];
+        int dy = kickTable[i][1];
+
+        if (!isCollision(board, rotated.shape, rotated.y + dy, rotated.x + dx))
+        {
+            rotated.x += dx;
+            rotated.y += dy;
+            piece = rotated;
+            return true;
+        }
+    }
+
+    return false;
+}
