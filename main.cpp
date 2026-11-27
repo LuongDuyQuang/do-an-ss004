@@ -156,6 +156,102 @@ void drawGameOverScreen(const GameState &state) {
     cout << "=================================\n";
 }
 
+void removeLine() {}
+
+// BUOC 1 XU LY PHIM BAM THEO TUNG MAN HINH
+void processInput(GameState &state) {
+    if (!kbhit()) return;
+    char c = getch();
+    if (state.screen == STATE_MENU) {
+        if (c == '\r' || c == ' ') {
+            initBoard();
+            spawnNewPiece();
+            startGame(state);
+        } else if (c == 'q' || c == 'Q') {
+            state.isRunning = false;
+        }
+        return;
+    }
+    if (state.screen == STATE_PAUSED) {
+        if (c == 'p' || c == 'P') {
+            togglePause(state);
+        } else if (c == 'q' || c == 'Q') {
+            initGameState(state, STATE_MENU);
+        }
+        return;
+    }
+    if (state.screen == STATE_GAMEOVER) {
+        if (c == 'r' || c == 'R') {
+            initBoard();
+            spawnNewPiece();
+            startGame(state);
+        } else if (c == 'q' || c == 'Q') {
+            state.isRunning = false;
+        }
+        return;
+    }
+    // Trang thai STATE_PLAYING
+    if ((c == 'a' || c == 'A') && canMove(-1, 0)) {
+        x--;
+        state.needRedraw = true;
+    } else if ((c == 'd' || c == 'D') && canMove(1, 0)) {
+        x++;
+        state.needRedraw = true;
+    } else if ((c == 'x' || c == 'X') && canMove(0, 1)) {
+        y++;
+        resetDropTimer(state);
+        state.needRedraw = true;
+    } else if (c == 'p' || c == 'P') {
+        togglePause(state);
+    } else if (c == 'q' || c == 'Q') {
+        triggerGameOver(state);
+    }
+}
+
+// BUOC 2 CAP NHAT TRANG THAI & NHIP ROI DELTA TIME
+void updateGameState(GameState &state, double deltaTimeMs) {
+    if (!consumeGravityTick(state, deltaTimeMs)) {
+        return;
+    }
+    if (canMove(0, 1)) {
+        y++;
+    } else {
+        block2Board();
+        removeLine();
+        spawnNewPiece();
+        // Khoi moi sinh ra o dinh da bi chan -> Thua cuoc
+        if (!canMove(0, 0)) {
+            triggerGameOver(state);
+        }
+    }
+}
+
+// BUOC 3 VE MAN HINH KHI CO THAY DOI
+void renderGame(GameState &state) {
+    if (!state.needRedraw) return;
+    state.needRedraw = false;
+    switch (state.screen) {
+        case STATE_MENU:
+            drawMenu();
+            break;
+        case STATE_PLAYING:
+            block2Board();
+            draw();
+            cout << "Score: " << state.score << " | Level: " << state.level
+                 << " | [P] Pause | [Q] Ket thuc\n";
+            boardDelBlock();
+            break;
+        case STATE_PAUSED:
+            block2Board();
+            drawPauseScreen(state);
+            boardDelBlock();
+            break;
+        case STATE_GAMEOVER:
+            drawGameOverScreen(state);
+            break;
+    }
+}
+
 
 int main()
 {
