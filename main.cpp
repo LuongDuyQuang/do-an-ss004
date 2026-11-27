@@ -253,30 +253,30 @@ void renderGame(GameState &state) {
 }
 
 
-int main()
-{
-    srand(time(0));
-    x = 5; y = 0; b = rand()%7;
+void runGameLoop() {
+    GameState state;
+    initGameState(state, STATE_MENU);
     initBoard();
-    while (1){
-        boardDelBlock();
-        if (kbhit()){
-            char c = getch();
-            if (c == 'a' && canMove(-1,0)) x--;
-            if (c == 'd' && canMove( 1,0)) x++;
-            if (c == 'x' && canMove( 0,1)) y++;
-            if (c == 'q') break;
-        }
-        if (canMove(0,1)) y++;
-        else{
-            block2Board();
-            removeLine();
-            x = 5; y = 0; b = rand()%7;
-        }
-        block2Board();
-        draw();
-        _sleep(500);
+    spawnNewPiece();
+
+    auto lastTime = chrono::steady_clock::now();
+
+    while (state.isRunning) {
+        auto currentTime = chrono::steady_clock::now();
+        chrono::duration<double, milli> elapsed = currentTime - lastTime;
+        lastTime = currentTime;
+
+        processInput(state);
+        updateGameState(state, elapsed.count());
+        renderGame(state);
+
+        this_thread::sleep_for(chrono::milliseconds(16));
     }
+}
+
+int main() {
+    srand(static_cast<unsigned int>(time(0)));
+    runGameLoop();
     return 0;
 }
 
