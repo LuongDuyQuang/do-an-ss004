@@ -36,7 +36,7 @@ void startNewSession(GameSession &session, ScreenState startScreen = STATE_MENU)
     spawnNextPiece(session);
 }
 
-// Khoa khoi, xoa hang day, tinh diem/level, sinh khoi moi va kiem tra Game Over
+
 void lockAndSpawn(GameSession &session) {
     lockPiece(session.board, session.currentPiece.shape,
               session.currentPiece.y, session.currentPiece.x,
@@ -97,7 +97,7 @@ void drawGameOverScreen(const GameState &state) {
 }
 
 
-// BUOC 1 XU LY PHIM BAM THEO TUNG MAN HINH
+// XU LY PHIM BAM 
 void processInput(GameSession &session) {
     if (!_kbhit()) return;
     int c = _getch();
@@ -132,7 +132,6 @@ void processInput(GameSession &session) {
         return;
     }
 
-    // TODO (sau khi sua game_input cua Nhi): thay doan nay bang pollInput()
     if ((c == 'a' || c == 'A') &&
         !isCollision(session.board, session.currentPiece.shape,
                      session.currentPiece.y, session.currentPiece.x - 1)) {
@@ -167,75 +166,67 @@ void processInput(GameSession &session) {
     }
 }
 
-// BUOC 2 CAP NHAT TRANG THAI & NHIP ROI DELTA TIME
-void updateGameState(GameState &state, double deltaTimeMs) {
-    if (!consumeGravityTick(state, deltaTimeMs)) {
+
+// CAP NHAT TRANG THAI & NHIP ROI 
+void updateGameState(GameSession &session, double deltaTimeMs) {
+    if (!consumeGravityTick(session.state, deltaTimeMs)) {
         return;
     }
-    if (canMove(0, 1)) {
-        y++;
+
+    if (!isCollision(session.board, session.currentPiece.shape,
+                     session.currentPiece.y + 1, session.currentPiece.x)) {
+        session.currentPiece.y++;
     } else {
-        block2Board();
-        removeLine();
-        spawnNewPiece();
-        // Khoi moi sinh ra o dinh da bi chan -> Thua cuoc
-        if (!canMove(0, 0)) {
-            triggerGameOver(state);
-        }
+        lockAndSpawn(session);
     }
 }
 
-// BUOC 3 VE MAN HINH KHI CO THAY DOI
-void renderGame(GameState &state) {
-    if (!state.needRedraw) return;
-    state.needRedraw = false;
-    switch (state.screen) {
+// VE MAN HINH 
+void renderGame(GameSession &session) {
+    if (!session.state.needRedraw) return;
+    session.state.needRedraw = false;
+
+    switch (session.state.screen) {
         case STATE_MENU:
             drawMenu();
             break;
         case STATE_PLAYING:
-            block2Board();
-            draw();
-            cout << "Score: " << state.score << " | Level: " << state.level
-                 << " | [P] Pause | [Q] Ket thuc\n";
-            boardDelBlock();
+            renderFrame(session.board, session.state.score, session.state.level,
+                        session.currentPiece.shape, session.currentPiece.y,
+                        session.currentPiece.x, session.nextPiece.shape);
+            setCursorPosition(0, ROWS + 3);
+            cout << "[A/D] Di chuyen | [W] Xoay | [S] Xuong | [Space] Tha | [P] Pause\n";
             break;
         case STATE_PAUSED:
-            block2Board();
-            drawPauseScreen(state);
-            boardDelBlock();
+            drawPauseScreen(session);
             break;
         case STATE_GAMEOVER:
-            drawGameOverScreen(state);
+            drawGameOverScreen(session.state);
             break;
     }
 }
 
-
 void runGameLoop() {
-    GameState state;
-    initGameState(state, STATE_MENU);
-    initBoard();
-    spawnNewPiece();
+    hideCursor();
+    GameSession session;
+    startNewSession(session, STATE_MENU);
 
     auto lastTime = chrono::steady_clock::now();
 
-    while (state.isRunning) {
+    while (session.state.isRunning) {
         auto currentTime = chrono::steady_clock::now();
         chrono::duration<double, milli> elapsed = currentTime - lastTime;
         lastTime = currentTime;
 
-        processInput(state);
-        updateGameState(state, elapsed.count());
-        renderGame(state);
+        processInput(session);
+        updateGameState(session, elapsed.count());
+        renderGame(session);
 
         this_thread::sleep_for(chrono::milliseconds(16));
     }
 }
 
 int main() {
-    srand(static_cast<unsigned int>(time(0)));
     runGameLoop();
     return 0;
 }
-
