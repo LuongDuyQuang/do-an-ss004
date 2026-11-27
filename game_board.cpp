@@ -1,8 +1,6 @@
-
-#include "board.h"
+#include "game_board.h"
 
 #include <iostream>
-#include <windows.h>
 #include <iomanip>
 
 using namespace std;
@@ -27,35 +25,16 @@ void initBoard(int board[ROWS][COLS]) {
 // =====================================
 
 void setCursorPosition(int x, int y) {
-
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    COORD position;
-
-    position.X = x;
-    position.Y = y;
-
-    SetConsoleCursorPosition(hConsole, position);
+    cout << "\033[" << y + 1 << ";" << x + 1 << "H";
 }
-
 
 // =====================================
 // 3. AN CON TRO NHAP NHAY
 // =====================================
 
 void hideCursor() {
-
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    CONSOLE_CURSOR_INFO cursorInfo;
-
-    GetConsoleCursorInfo(hConsole, &cursorInfo);
-
-    cursorInfo.bVisible = FALSE;
-
-    SetConsoleCursorInfo(hConsole, &cursorInfo);
+    cout << "\033[?25l";
 }
-
 
 // =====================================
 // 4. HIEN THI BAN CO

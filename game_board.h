@@ -1,6 +1,5 @@
-
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef GAME_BOARD_H
+#define GAME_BOARD_H
 
 #include "game_logic.h"
 
