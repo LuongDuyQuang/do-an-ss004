@@ -22,3 +22,8 @@ struct Tetromino
     int rotation;
     int shape[SIZE][SIZE];
 };
+
+Tetromino createTetromino(PieceType type, int startX = 3, int startY = 0);
+void rotateClockwise(Tetromino& piece);
+bool rotateWithWallKick(Tetromino& piece, const int board[ROWS][COLS]);
+PieceType getRandomPieceBag();
