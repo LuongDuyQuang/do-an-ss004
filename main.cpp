@@ -1,282 +1,235 @@
 #include <iostream>
-#include <conio.h>
-
 #include <cstdlib>
-#include <ctime>
 #include <chrono>
 #include <thread>
+
 #include "game_state.h"
+#include "game_logic.h"
+#include "tetromino.h"
+#include "game_board.h"
+#include "game_input.h"
 
 using namespace std;
-#define H 20
-#define W 15
-char board[H][W] = {};
 
-int x, y, b;
-char blocks[][4][4] ={
-        {{' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '}},
-        {{' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '},
-         {' ','I',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {'I','I','I','I'},
-         {' ',' ',' ',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','O','O',' '},
-         {' ','O','O',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','T',' ',' '},
-         {'T','T','T',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ','S','S',' '},
-         {'S','S',' ',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {'Z','Z',' ',' '},
-         {' ','Z','Z',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {'J',' ',' ',' '},
-         {'J','J','J',' '},
-         {' ',' ',' ',' '}},
-        {{' ',' ',' ',' '},
-         {' ',' ','L',' '},
-         {'L','L','L',' '},
-         {' ',' ',' ',' '}}
+struct GameSession {
+    int board[ROWS][COLS];
+    Tetromino currentPiece;
+    Tetromino nextPiece;
+    GameState state;
+    int linesClearedTotal;
+    int highScore;
 };
-bool canMove(int dx, int dy){
-    for (int i = 0; i < 4; i++ )
-        for (int j = 0; j < 4; j++ )
-            if (blocks[b][i][j] != ' ') {
-                int xt = x + j + dx;
-                int yt = y + i + dy;
-                if (xt < 1 || xt >= W-1 || yt >= H-1 ) return false;
-                if (board[yt][xt] != ' ') return false;
-            }
-    return true;
-}
-void block2Board(){
-    for (int i = 0; i < 4; i++ )
-        for (int j = 0; j < 4; j++ )
-            if (blocks[b][i][j] != ' ')
-                board[y+i][x+j] = blocks[b][i][j];
-}
-void boardDelBlock(){
-    for (int i = 0; i < 4; i++ )
-        for (int j = 0; j < 4; j++ )
-            if (blocks[b][i][j] != ' ')
-                board[y+i][x+j] = ' ';
-}
-void initBoard(){
-    for (int i = 0 ; i < H ; i++)
-        for (int j = 0 ; j < W ; j++)
-            if (i == 0 || i == H-1 || j ==0 || j == W-1) board[i][j] = '#';
-            else board[i][j] = ' ';
-}
-void draw(){
-    system("cls");
 
-    for (int i = 0 ; i < H ; i++, cout<<endl)
-        for (int j = 0 ; j < W ; j++) cout<<board[i][j];
+
+void spawnNextPiece(GameSession &session) {
+    session.currentPiece = session.nextPiece;
+    session.currentPiece.x = 3;
+    session.currentPiece.y = 0;
+    session.nextPiece = createTetromino(getRandomPieceBag());
 }
 
-void spawnNewPiece() 
-{
-    x = 5;
-    y = 0;
-    b = rand() % 7;
+
+void startNewSession(GameSession &session, ScreenState startScreen = STATE_MENU) {
+    initBoard(session.board);
+    initGameState(session.state, startScreen);
+    session.linesClearedTotal = 0;
+    session.nextPiece = createTetromino(getRandomPieceBag());
+    spawnNextPiece(session);
+    session.highScore = loadHighScore();
 }
 
-void drawMenu() 
-{
-    system("cls");
-    cout << "=================================\n";
-    cout << "        TETRIS CONSOLE C++       \n";
-    cout << "=================================\n";
-    cout << "  [Enter / Space] : Bat dau choi \n";
-    cout << "  [A / D / X]     : Trai/Phai/Xuong\n";
-    cout << "  [P]             : Tam dung     \n";
-    cout << "  [Q]             : Thoat / Dung \n";
-    cout << "=================================\n";
+
+void lockAndSpawn(GameSession &session) {
+    lockPiece(session.board, session.currentPiece.shape,
+              session.currentPiece.y, session.currentPiece.x,
+              static_cast<int>(session.currentPiece.type));
+
+    int cleared = clearFullLines(session.board);
+    if (cleared > 0) {
+        session.state.score += calculatePoints(cleared, session.state.level);
+        session.linesClearedTotal += cleared;
+        session.state.level = 1 + session.linesClearedTotal / 10;
+
+        double nextInterval = 500.0 - (session.state.level - 1) * 40.0;
+        session.state.dropIntervalMs = (nextInterval > 100.0) ? nextInterval : 100.0;
+        playSound(SoundEffect::CLEAR_LINE);
+    }
+
+    spawnNextPiece(session);
+    if (isCollision(session.board, session.currentPiece.shape,
+                    session.currentPiece.y, session.currentPiece.x)) {
+        saveHighScore(session.state.score);
+        session.highScore = loadHighScore();
+        playSound(SoundEffect::GAME_OVER);
+        triggerGameOver(session.state);
+    }
+    session.state.needRedraw = true;
 }
 
-void drawPauseScreen(const GameState &state)
-{
-    draw();
-    cout << "\n[TAM DUNG] Score: " << state.score
-         << " | Level: " << state.level << "\n";
-    cout << "Nhan [P] de tiep tuc, [Q] de ve Menu.\n";
-}
 
-void drawGameOverScreen(const GameState &state) {
+
+
+
+void drawGameOverScreen(const GameSession &session) {
     system("cls");
     cout << "=================================\n";
     cout << "            GAME OVER!           \n";
     cout << "=================================\n";
-    cout << "  Diem so : " << state.score << "\n";
-    cout << "  Cap do  : " << state.level << "\n";
+    cout << "  Diem so : " << session.state.score << "\n";
+    cout << "  Ky luc  : " << session.highScore << "\n";
+    cout << "  Cap do  : " << session.state.level << "\n";
     cout << "---------------------------------\n";
-    cout << "  Nhan [R] de choi lai           \n";
-    cout << "  Nhan [Q] de thoat              \n";
+    cout << "  Nhan [Space] de choi lai       \n";
+    cout << "  Nhan [Q]     de thoat          \n";
     cout << "=================================\n";
 }
 
-void removeLine() {}
 
-// BUOC 1 XU LY PHIM BAM THEO TUNG MAN HINH
-void processInput(GameState &state) {
-    if (!kbhit()) return;
-    char c = getch();
-    if (state.screen == STATE_MENU) {
-        if (c == '\r' || c == ' ') {
-            initBoard();
-            spawnNewPiece();
-            startGame(state);
-        } else if (c == 'q' || c == 'Q') {
-            state.isRunning = false;
+// XU LY PHIM BAM 
+void processInput(GameSession &session) {
+    if (session.state.screen != STATE_PLAYING &&
+        session.state.screen != STATE_GAMEOVER) {
+        return;
+    }
+
+    KeyAction action = pollInput();
+    if (action == KeyAction::NONE) return;
+
+    if (session.state.screen == STATE_GAMEOVER) {
+        if (action == KeyAction::HARD_DROP) {
+            system("cls");
+            startNewSession(session, STATE_PLAYING);
+        } else if (action == KeyAction::QUIT) {
+            session.state.isRunning = false;
         }
         return;
     }
-    if (state.screen == STATE_PAUSED) {
-        if (c == 'p' || c == 'P') {
-            togglePause(state);
-        } else if (c == 'q' || c == 'Q') {
-            initGameState(state, STATE_MENU);
-        }
-        return;
-    }
-    if (state.screen == STATE_GAMEOVER) {
-        if (c == 'r' || c == 'R') {
-            initBoard();
-            spawnNewPiece();
-            startGame(state);
-        } else if (c == 'q' || c == 'Q') {
-            state.isRunning = false;
-        }
-        return;
-    }
-    // Trang thai STATE_PLAYING
-    if ((c == 'a' || c == 'A') && canMove(-1, 0)) {
-        x--;
-        state.needRedraw = true;
-    } else if ((c == 'd' || c == 'D') && canMove(1, 0)) {
-        x++;
-        state.needRedraw = true;
-    } else if ((c == 'x' || c == 'X') && canMove(0, 1)) {
-        y++;
-        resetDropTimer(state);
-        state.needRedraw = true;
-    } else if (c == 'p' || c == 'P') {
-        togglePause(state);
-    } else if (c == 'q' || c == 'Q') {
-        triggerGameOver(state);
+
+    switch (action) {
+        case KeyAction::MOVE_LEFT:
+            if (!isCollision(session.board, session.currentPiece.shape,
+                             session.currentPiece.y, session.currentPiece.x - 1)) {
+                session.currentPiece.x--;
+                playSound(SoundEffect::MOVE);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::MOVE_RIGHT:
+            if (!isCollision(session.board, session.currentPiece.shape,
+                             session.currentPiece.y, session.currentPiece.x + 1)) {
+                session.currentPiece.x++;
+                playSound(SoundEffect::MOVE);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::ROTATE:
+            if (rotateWithWallKick(session.currentPiece, session.board)) {
+                playSound(SoundEffect::ROTATE);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::SOFT_DROP:
+            if (!isCollision(session.board, session.currentPiece.shape,
+                             session.currentPiece.y + 1, session.currentPiece.x)) {
+                session.currentPiece.y++;
+                resetDropTimer(session.state);
+                session.state.needRedraw = true;
+            }
+            break;
+        case KeyAction::HARD_DROP:
+            while (!isCollision(session.board, session.currentPiece.shape,
+                                session.currentPiece.y + 1, session.currentPiece.x)) {
+                session.currentPiece.y++;
+            }
+            playSound(SoundEffect::DROP);
+            lockAndSpawn(session);
+            resetDropTimer(session.state);
+            break;
+        case KeyAction::PAUSE:
+            togglePause(session.state);
+            break;
+        case KeyAction::QUIT:
+            saveHighScore(session.state.score);
+            session.highScore = loadHighScore();
+            playSound(SoundEffect::GAME_OVER);
+            triggerGameOver(session.state);
+            break;
+        case KeyAction::NONE:
+            break;
     }
 }
 
-// BUOC 2 CAP NHAT TRANG THAI & NHIP ROI DELTA TIME
-void updateGameState(GameState &state, double deltaTimeMs) {
-    if (!consumeGravityTick(state, deltaTimeMs)) {
+
+// CAP NHAT TRANG THAI & NHIP ROI 
+void updateGameState(GameSession &session, double deltaTimeMs) {
+    if (!consumeGravityTick(session.state, deltaTimeMs)) {
         return;
     }
-    if (canMove(0, 1)) {
-        y++;
+
+    if (!isCollision(session.board, session.currentPiece.shape,
+                     session.currentPiece.y + 1, session.currentPiece.x)) {
+        session.currentPiece.y++;
     } else {
-        block2Board();
-        removeLine();
-        spawnNewPiece();
-        // Khoi moi sinh ra o dinh da bi chan -> Thua cuoc
-        if (!canMove(0, 0)) {
-            triggerGameOver(state);
-        }
+        lockAndSpawn(session);
     }
 }
 
-// BUOC 3 VE MAN HINH KHI CO THAY DOI
-void renderGame(GameState &state) {
-    if (!state.needRedraw) return;
-    state.needRedraw = false;
-    switch (state.screen) {
+// VE MAN HINH 
+void renderGame(GameSession &session) {
+    if (!session.state.needRedraw) return;
+    session.state.needRedraw = false;
+
+    switch (session.state.screen) {
         case STATE_MENU:
-            drawMenu();
+            if (showStartMenu(session.highScore)) {
+                system("cls");
+                startNewSession(session, STATE_PLAYING);
+            } else {
+                session.state.isRunning = false;
+            }
             break;
         case STATE_PLAYING:
-            block2Board();
-            draw();
-            cout << "Score: " << state.score << " | Level: " << state.level
-                 << " | [P] Pause | [Q] Ket thuc\n";
-            boardDelBlock();
+            renderFrame(session.board, session.state.score, session.state.level,
+                        session.currentPiece.shape, session.currentPiece.y,
+                        session.currentPiece.x, session.nextPiece.shape);
+            setCursorPosition(0, ROWS + 3);
+            cout << "[A/D] Di chuyen | [W] Xoay | [S] Xuong | [Space] Tha | [P] Pause\n";
             break;
         case STATE_PAUSED:
-            block2Board();
-            drawPauseScreen(state);
-            boardDelBlock();
+            if (showPauseMenu()) {
+                system("cls");
+                togglePause(session.state);
+            } else {
+                startNewSession(session, STATE_MENU);
+            }
             break;
         case STATE_GAMEOVER:
-            drawGameOverScreen(state);
+            drawGameOverScreen(session);
             break;
     }
 }
 
-
 void runGameLoop() {
-    GameState state;
-    initGameState(state, STATE_MENU);
-    initBoard();
-    spawnNewPiece();
+    hideCursor();
+    GameSession session;
+    startNewSession(session, STATE_MENU);
 
     auto lastTime = chrono::steady_clock::now();
 
-    while (state.isRunning) {
+    while (session.state.isRunning) {
         auto currentTime = chrono::steady_clock::now();
         chrono::duration<double, milli> elapsed = currentTime - lastTime;
         lastTime = currentTime;
 
-        processInput(state);
-        updateGameState(state, elapsed.count());
-        renderGame(state);
+        processInput(session);
+        updateGameState(session, elapsed.count());
+        renderGame(session);
 
         this_thread::sleep_for(chrono::milliseconds(16));
     }
 }
 
 int main() {
-    srand(static_cast<unsigned int>(time(0)));
     runGameLoop();
     return 0;
 }
-
