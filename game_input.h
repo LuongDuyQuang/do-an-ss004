@@ -1,5 +1,6 @@
 #ifndef GAME_INPUT_H
 #define GAME_INPUT_H
+#include <string>
 
 enum class KeyAction {
     NONE,
@@ -10,6 +11,14 @@ enum class KeyAction {
     HARD_DROP,
     PAUSE,
     QUIT
+};
+
+enum class SoundEffect {
+    MOVE,
+    ROTATE,
+    DROP,
+    CLEAR_LINE,
+    GAME_OVER
 };
 
 KeyAction pollInput();

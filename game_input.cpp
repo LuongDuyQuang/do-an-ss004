@@ -1,5 +1,13 @@
 #include "game_input.h"
 #include <conio.h>
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstdlib>
+#include <windows.h>
+
+using namespace std;
+
 
 KeyAction pollInput() {
     if (!_kbhit()) return KeyAction::NONE;
