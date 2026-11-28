@@ -13,6 +13,14 @@ enum class KeyAction {
     QUIT
 };
 
+enum class SoundEffect {
+    MOVE,
+    ROTATE,
+    DROP,
+    CLEAR_LINE,
+    GAME_OVER
+};
+
 KeyAction pollInput();
 int loadHighScore(const std::string& filename = "highscore.txt");
 bool saveHighScore(int newScore, const std::string& filename = "highscore.txt");
